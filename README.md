@@ -49,6 +49,12 @@ mutex around all operations. Benchmarking would help uncover the performance
 impact of this, and in particular I'd be curious to see how the more expensive
 operations (compaction, stale job search) impact concurrent requests.
 
+The documentation is lacking. I'd like to add godoc comments to the `Queue`
+implementation to document the behavior and gotchas. Behavior would include the
+compaction and stale job detection, and gotchas should cover cases where the
+methods may mutate the state of the Job struct that might be surprising (e.g.,
+`enqueue` overrides the existing value for the job's ID and state).
+
 Finally, the HTTP harness was written quickly and without a lot of bells and
 whistles. At minimum, I would want to add better logging and error reporting to
 a production service, basic authentication and authorization middleware, and
