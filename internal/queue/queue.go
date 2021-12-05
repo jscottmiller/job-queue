@@ -70,6 +70,14 @@ func New(ctx context.Context) *Queue {
 	return q
 }
 
+func (q *Queue) GetJob(id string) (j *Job) {
+	j, ok := q.byID[id]
+	if !ok {
+		return nil
+	}
+	return j
+}
+
 func (q *Queue) Enqueue(j *Job) {
 	q.Lock()
 	defer q.Unlock()
