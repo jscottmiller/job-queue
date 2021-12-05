@@ -2,7 +2,8 @@
 
 A simple REST service exposing an in-memory job queue.
 
-To run the server, execute `./scripts/run.sh`
+To run the server, execute `./scripts/run.sh`. The server binds to all
+interfaces on port 8080. This cannot be changed.
 
 To run tests, execute `./scripts/test.sh`
 
@@ -50,5 +51,6 @@ operations (compaction, stale job search) impact concurrent requests.
 
 Finally, the HTTP harness was written quickly and without a lot of bells and
 whistles. At minimum, I would want to add better logging and error reporting to
-a production service, as well as basic authentication and authorization
-middleware.
+a production service, basic authentication and authorization middleware, and
+add environment variables for specifying the port and interface that the server
+binds to.
