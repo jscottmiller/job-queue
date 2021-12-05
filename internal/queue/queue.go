@@ -15,6 +15,8 @@ type Queue struct {
 	sync.Mutex
 	byID     map[string]*Job
 	pending  []*Job
+	head     int
+	entries  int
 	dequeued []dequeuedJob
 }
 
@@ -85,25 +87,38 @@ func (q *Queue) Enqueue(j *Job) {
 	defer q.Unlock()
 
 	j.ID = uuid.New().String()
-	q.byID[j.ID] = j
-	q.pending = append(q.pending, j)
 	j.Status = JobStatus_Queued
+
+	q.byID[j.ID] = j
+
+	q.pending = append(q.pending, j)
+	q.entries++
 }
 
 func (q *Queue) Dequeue() (*Job, error) {
 	q.Lock()
 	defer q.Unlock()
 
-	if len(q.pending) == 0 {
+	if q.entries == 0 {
 		return nil, QueueEmpty
 	}
 
-	var last *Job
-	last, q.pending = q.pending[len(q.pending)-1], q.pending[:len(q.pending)-1]
-	q.dequeued = append(q.dequeued, dequeuedJob{job: last, time: time_Now()})
-	last.Status = JobStatus_InProgress
+	first := q.pending[q.head]
+	q.pending[q.head] = nil
+	first.Status = JobStatus_InProgress
+	q.head++
+	q.entries--
 
-	return last, nil
+	if float64(q.entries)/float64(len(q.pending)) < 0.50 {
+		extent := len(q.pending) - q.head
+		copy(q.pending, q.pending[q.head:])
+		q.pending = q.pending[:extent]
+		q.head = 0
+	}
+
+	q.dequeued = append(q.dequeued, dequeuedJob{job: first, time: time_Now()})
+
+	return first, nil
 }
 
 func (q *Queue) Conclude(id string) (*Job, error) {
@@ -146,8 +161,9 @@ func (q *Queue) checkExpiredJobs() {
 			break
 		}
 		j := dequeuedJob.job
-		q.pending = append(q.pending, j)
 		j.Status = JobStatus_Queued
+		q.pending = append(q.pending, j)
+		q.entries++
 		dequeuedJob.job = nil
 	}
 

@@ -16,15 +16,15 @@ func TestSimpleEnqueueDequeue(t *testing.T) {
 		jobs = append(jobs, j)
 	}
 
-	for i := 9; i >= 0; i-- {
-		j, err := q.Dequeue()
+	for _, j := range jobs {
+		d, err := q.Dequeue()
 		if err != nil {
 			t.Errorf("error on dequeue: %v", err)
 		}
-		if j.ID != jobs[i].ID {
-			t.Errorf("dequeue expected: %s got %s", jobs[i].ID, j.ID)
+		if d.ID != j.ID {
+			t.Errorf("dequeue expected: %s got %s", j.ID, d.ID)
 		}
-		if _, err := q.Conclude(j.ID); err != nil {
+		if _, err := q.Conclude(d.ID); err != nil {
 			t.Errorf("could not conclude job: %v", err)
 		}
 	}
