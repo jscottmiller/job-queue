@@ -109,6 +109,8 @@ func (q *Queue) Dequeue() (*Job, error) {
 	q.head++
 	q.entries--
 
+	// Compact the queue if it becomes too sparse
+	// TODO: Fill constant could become a configuration parameter to the queue
 	if float64(q.entries)/float64(len(q.pending)) < 0.50 {
 		extent := len(q.pending) - q.head
 		copy(q.pending, q.pending[q.head:])
