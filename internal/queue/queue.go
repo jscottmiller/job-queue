@@ -1,3 +1,4 @@
+// Package queue implements a simple in-memory job queue
 package queue
 
 import (
