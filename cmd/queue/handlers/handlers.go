@@ -9,6 +9,10 @@ type Application struct {
 	Queue *queue.Queue
 }
 
+type ErrorResponse struct {
+	Error string
+}
+
 func (a *Application) Router() *mux.Router {
 	r := mux.NewRouter()
 

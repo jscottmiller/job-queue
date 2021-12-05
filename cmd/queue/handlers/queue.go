@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -14,7 +15,11 @@ func (a *Application) ReadJob(w http.ResponseWriter, r *http.Request) {
 
 	j := a.Queue.GetJob(id)
 	if j == nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "job not found",
+		})
 		return
 	}
 
@@ -27,7 +32,20 @@ func (a *Application) EnqueueJob(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&j); err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "invalid job",
+		})
+		return
+	}
+
+	if j.Type != queue.JobType_TimeCritical && j.Type != queue.JobType_NotTimeCritical {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "invalid job type",
+		})
 		return
 	}
 
@@ -41,6 +59,9 @@ func (a *Application) DequeueJob(w http.ResponseWriter, r *http.Request) {
 	j, err := a.Queue.Dequeue()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: fmt.Sprintf("could not dequeue job: %v", err),
+		})
 		return
 	}
 
@@ -55,6 +76,9 @@ func (a *Application) ConcludeJob(w http.ResponseWriter, r *http.Request) {
 	err := a.Queue.Conclude(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: fmt.Sprintf("could not conclude job: %v", err),
+		})
 		return
 	}
 
