@@ -19,7 +19,9 @@ its capacity, so I'd expect the overall memory usage to stabilize after the
 service has run for a while. In the worst case, enqueue operations may cause a
 slice allocation until the size stabilizes, and dequeue operations may trigger
 a compaction, though on average I would expect both of those operations to
-execute in constant time.
+execute in constant time. Concluding a job currently requires a scan through a
+slice of all jobs in progress, though this slice is periodically trimmed and
+compacted.
 
 To help ensure at-least-once processing, a stale job that was dequeued but not
 concluded after more than 5 minutes will return to the queue (the 5 minute
