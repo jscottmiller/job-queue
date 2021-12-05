@@ -158,7 +158,9 @@ func (q *Queue) checkExpiredJobs() {
 
 	n := time_Now()
 
-	for _, dequeuedJob := range q.dequeued {
+	// Find any dequeued jobs that have been inactive for more than 5 minutes and
+	// return them to the queue
+	for i, dequeuedJob := range q.dequeued {
 		if dequeuedJob.job == nil {
 			continue
 		}
@@ -169,9 +171,10 @@ func (q *Queue) checkExpiredJobs() {
 		j.Status = JobStatus_Queued
 		q.pending = append(q.pending, j)
 		q.entries++
-		dequeuedJob.job = nil
+		q.dequeued[i].job = nil
 	}
 
+	// Compact the dequeued jobs slice
 	var insert int
 	for current := 0; current < len(q.dequeued); current++ {
 		if q.dequeued[current].job != nil {
