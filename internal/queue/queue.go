@@ -75,6 +75,9 @@ func New(ctx context.Context) *Queue {
 }
 
 func (q *Queue) GetJob(id string) (j *Job) {
+	q.Lock()
+	defer q.Unlock()
+
 	j, ok := q.byID[id]
 	if !ok {
 		return nil
