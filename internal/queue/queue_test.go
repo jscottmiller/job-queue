@@ -2,27 +2,29 @@ package queue
 
 import (
 	"context"
-	"strconv"
 	"testing"
 	"time"
 )
 
 func TestSimpleEnqueueDequeue(t *testing.T) {
 	q := New(context.Background())
+	var jobs []*Job
 
-	for i := 0; i < 5; i++ {
-		q.Enqueue(&Job{ID: strconv.Itoa(i)})
+	for i := 0; i < 10; i++ {
+		j := &Job{Type: JobType_TimeCritical}
+		q.Enqueue(j)
+		jobs = append(jobs, j)
 	}
 
-	for i := 4; i >= 0; i-- {
+	for i := 9; i >= 0; i-- {
 		j, err := q.Dequeue()
 		if err != nil {
 			t.Errorf("error on dequeue: %v", err)
 		}
-		if j.ID != strconv.Itoa(i) {
-			t.Errorf("dequeue expected: %d got %s", i, j.ID)
+		if j.ID != jobs[i].ID {
+			t.Errorf("dequeue expected: %s got %s", jobs[i].ID, j.ID)
 		}
-		if err := q.Conclude(j.ID); err != nil {
+		if _, err := q.Conclude(j.ID); err != nil {
 			t.Errorf("could not conclude job: %v", err)
 		}
 	}
@@ -35,7 +37,7 @@ func TestSimpleEnqueueDequeue(t *testing.T) {
 func TestCannotConcludedUnknownJob(t *testing.T) {
 	q := New(context.Background())
 
-	if err := q.Conclude("unknown"); err != JobNotFound {
+	if _, err := q.Conclude("unknown"); err != JobNotFound {
 		t.Errorf("expected: %v, got: %v", JobNotFound, err)
 	}
 }
@@ -43,8 +45,9 @@ func TestCannotConcludedUnknownJob(t *testing.T) {
 func TestAbandonedJobReturnsToQueue(t *testing.T) {
 	q := New(context.Background())
 
-	q.Enqueue(&Job{ID: "test"})
-	if j, err := q.Dequeue(); err != nil || j.ID != "test" {
+	j := &Job{Type: JobType_TimeCritical}
+	q.Enqueue(j)
+	if d, err := q.Dequeue(); err != nil || d.ID != j.ID {
 		t.Errorf("did not dequeue test job")
 	}
 
@@ -55,7 +58,7 @@ func TestAbandonedJobReturnsToQueue(t *testing.T) {
 	time_Now = func() time.Time { return time.Now().Add(10 * time.Minute) }
 	q.checkExpiredJobs()
 
-	if j, err := q.Dequeue(); err != nil || j.ID != "test" {
+	if d, err := q.Dequeue(); err != nil || d.ID != j.ID {
 		t.Errorf("did not dequeue test job")
 	}
 }
@@ -63,12 +66,13 @@ func TestAbandonedJobReturnsToQueue(t *testing.T) {
 func TestConcludeJob(t *testing.T) {
 	q := New(context.Background())
 
-	q.Enqueue(&Job{ID: "test"})
-	if j, err := q.Dequeue(); err != nil || j.ID != "test" {
+	j := &Job{Type: JobType_TimeCritical}
+	q.Enqueue(j)
+	if d, err := q.Dequeue(); err != nil || d.ID != j.ID {
 		t.Errorf("did not dequeue test job")
 	}
 
-	if err := q.Conclude("test"); err != nil {
+	if _, err := q.Conclude(j.ID); err != nil {
 		t.Errorf("error concluding job: %v", err)
 	}
 

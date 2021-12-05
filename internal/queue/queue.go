@@ -106,19 +106,20 @@ func (q *Queue) Dequeue() (*Job, error) {
 	return last, nil
 }
 
-func (q *Queue) Conclude(id string) error {
+func (q *Queue) Conclude(id string) (*Job, error) {
 	q.Lock()
 	defer q.Unlock()
 
 	j, ok := q.byID[id]
 	if !ok {
-		return JobNotFound
+		return nil, JobNotFound
 	}
 
 	if j.Status != JobStatus_InProgress {
-		return JobNotInProgress
+		return nil, JobNotInProgress
 	}
 
+	j.Status = JobStatus_Concluded
 	delete(q.byID, id)
 
 	for i, deq := range q.dequeued {
@@ -128,7 +129,7 @@ func (q *Queue) Conclude(id string) error {
 		}
 	}
 
-	return nil
+	return j, nil
 }
 
 func (q *Queue) checkExpiredJobs() {

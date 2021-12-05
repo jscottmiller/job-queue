@@ -15,7 +15,6 @@ func (a *Application) ReadJob(w http.ResponseWriter, r *http.Request) {
 
 	j := a.Queue.GetJob(id)
 	if j == nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(ErrorResponse{
 			Error: "job not found",
@@ -23,7 +22,6 @@ func (a *Application) ReadJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(j)
 }
 
@@ -32,7 +30,6 @@ func (a *Application) EnqueueJob(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&j); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{
 			Error: "invalid job",
@@ -41,7 +38,6 @@ func (a *Application) EnqueueJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if j.Type != queue.JobType_TimeCritical && j.Type != queue.JobType_NotTimeCritical {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{
 			Error: "invalid job type",
@@ -51,7 +47,6 @@ func (a *Application) EnqueueJob(w http.ResponseWriter, r *http.Request) {
 
 	a.Queue.Enqueue(&j)
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(j)
 }
 
@@ -65,7 +60,6 @@ func (a *Application) DequeueJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(j)
 }
 
@@ -73,7 +67,7 @@ func (a *Application) ConcludeJob(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err := a.Queue.Conclude(id)
+	j, err := a.Queue.Conclude(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{
@@ -82,5 +76,5 @@ func (a *Application) ConcludeJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(j)
 }
