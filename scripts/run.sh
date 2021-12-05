@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go run cmd/queue/main.go
+go run -mod vendor cmd/queue/main.go
