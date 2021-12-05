@@ -28,7 +28,7 @@ func TestSimpleEnqueueDequeue(t *testing.T) {
 	}
 
 	if _, err := q.Dequeue(); err != QueueEmpty {
-		t.Errorf("(%v).Dequeue err is %v, expected %v", q, err, QueueEmpty)
+		t.Errorf("expected the queue to be empty")
 	}
 }
 
