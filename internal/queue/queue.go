@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var time_Now = time.Now
@@ -82,6 +84,7 @@ func (q *Queue) Enqueue(j *Job) {
 	q.Lock()
 	defer q.Unlock()
 
+	j.ID = uuid.New().String()
 	q.byID[j.ID] = j
 	q.pending = append(q.pending, j)
 	j.Status = JobStatus_Queued
