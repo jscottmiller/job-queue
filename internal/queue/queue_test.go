@@ -10,11 +10,11 @@ import (
 func TestSimpleEnqueueDequeue(t *testing.T) {
 	q := New(context.Background())
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		q.Enqueue(&Job{ID: strconv.Itoa(i)})
 	}
 
-	for i := 2; i >= 0; i-- {
+	for i := 4; i >= 0; i-- {
 		j, err := q.Dequeue()
 		if err != nil {
 			t.Errorf("error on dequeue: %v", err)
