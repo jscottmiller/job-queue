@@ -4,6 +4,7 @@ package queue
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -22,10 +23,17 @@ type Queue struct {
 }
 
 type Job struct {
-	ID     string
-	Status JobStatus
-	Type   JobType
+	ID       string
+	Priority float64
+	Status   JobStatus
+	Type     JobType
 }
+
+type byPriority []*Job
+
+func (a byPriority) Len() int           { return len(a) }
+func (a byPriority) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byPriority) Less(i, j int) bool { return a[i].Priority > a[j].Priority }
 
 type JobType string
 
@@ -106,6 +114,8 @@ func (q *Queue) Dequeue() (*Job, error) {
 	if q.entries == 0 {
 		return nil, QueueEmpty
 	}
+
+	sort.Sort(byPriority(q.pending[q.head:]))
 
 	first := q.pending[q.head]
 	q.pending[q.head] = nil

@@ -34,6 +34,32 @@ func TestSimpleEnqueueDequeue(t *testing.T) {
 	}
 }
 
+func TestPriorityWithTwoJobs(t *testing.T) {
+	q := New(context.Background())
+
+	j1 := &Job{Type: JobType_TimeCritical, Priority: 1}
+	q.Enqueue(j1)
+
+	j2 := &Job{Type: JobType_TimeCritical, Priority: 2}
+	q.Enqueue(j2)
+
+	d1, err := q.Dequeue()
+	if err != nil {
+		t.Errorf("error on dequeue: %v", err)
+	}
+	if d1.ID != j2.ID {
+		t.Errorf("Dequeue expected %v got %v", j2.ID, d1.ID)
+	}
+
+	d2, err := q.Dequeue()
+	if err != nil {
+		t.Errorf("error on dequeue: %v", err)
+	}
+	if d2.ID != j1.ID {
+		t.Errorf("Dequeue expected %v got %v", j1.ID, d2.ID)
+	}
+}
+
 func TestCannotConcludedUnknownJob(t *testing.T) {
 	q := New(context.Background())
 
